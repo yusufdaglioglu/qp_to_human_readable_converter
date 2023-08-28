@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>quoted printable converter</title>
+  
+  <script>
+
+    "use strict";
+
+    // cvf files are large.
+    // do not print if you test the orjinal file.
+    // otherwise the browser may freeze.
+    var consoleOutput = true;
+
+    function convertToHumanReadable() {
+      var currentLine = -1;
+      var qpText;
+      var middleArr;
+      try {
+        qpText = document.getElementById("qpInput").value;
+
+        // = character is not allowed on decodeURI function.
+        // we remove only the case we know exactly.
+        var middle = qpText.replace(/=UTF-8;ENCODING=/g, 'REPLACEDXX');
+        middle = middle.replace(/ENCODING=BASE64;/g, 'REPLACEDXX');
+
+        if(consoleOutput){
+          console.log(middle);
+        }
+        
+        // == exist end of some base64 photo data.
+        middle = middle.replace(/==\n/g, 'REPLACEDXX\n');
+
+        if(consoleOutput){
+          console.log(middle);
+        }
+
+        // vcf official format or some android contact managers exports
+        // some long lines in seperated lines. But this information normally
+        // does not have a new line.
+        // therefore we replaceonly we = character which is on the end of line of cvf ile.
+        // we replace with empty string because (as we mention above) the exporter adds
+        // this line (i don't know the reason).
+        middle = middle.replace(/=\n/g, '');
+        
+        if(consoleOutput){
+          console.log(middle);
+        }
+
+        // in this line, all = characters of the file is QP standart.
+        // now we replace to URI standart.
+        middle = middle.replace(/={1}/g, '%');
+        
+        if(consoleOutput){
+          console.log(middle);
+        }
+        
+        var humanReadableText = "";
+
+        var middleArr = middle.split("\n");
+        var middleArrLength = middleArr.length;
+        for (var i = 0; i < middleArrLength; i++) {
+          currentLine = i;
+          humanReadableText = humanReadableText + decodeURI(middleArr[i]) + "\n";
+        }
+
+        document.getElementById("humanReadableInput").value = humanReadableText;
+      } catch (e) {
+        console.warn("exception on currentLine:" + currentLine);
+
+        if(currentLine > 3){
+            console.warn(middleArr[currentLine-2]);
+            console.warn(middleArr[currentLine-1]);
+            console.warn(middleArr[currentLine]);
+            console.warn(middleArr[currentLine+1]);
+        }
+
+        console.warn(e);
+      }
+    }
+
+  </script>
+</head>
+
+<body>
+  <p>quoted printable converter</p>
+  </br></br>
+
+  <hr/>
+  QP
+  <textarea id="qpInput"></textarea>
+  <input type="button" value="convertToHumanReadable" onclick="convertToHumanReadable()" />
+
+  </br></br>
+  <hr/>
+  humanReadable
+  <textarea id="humanReadableInput" "></textarea>
+
+</body>
+
+</html>
